@@ -77,8 +77,8 @@ async function updateWidget() {
 
       switch (status) {
         case "CURRENT":
-          const unit = isAnime ? "ep" : "ch";
-          const action = isAnime ? "Watching" : "Reading";
+          const unit = isAnime ? "EP" : "CH";
+          const action = isAnime ? "Watched" : "Read";
           recentActivityText = progress > 0 
             ? `${action} ${unit} ${progress} of ${title}`
             : `${action} ${title}`;
@@ -90,7 +90,7 @@ async function updateWidget() {
           recentActivityText = `Plan to ${isAnime ? "watch" : "read"} ${title}`;
           break;
         case "REPEATING":
-          recentActivityText = `Re-${isAnime ? "watching" : "reading"} ${title}`;
+          recentActivityText = `Re-${isAnime ? "watched" : "read"} ${title}`;
           break;
         case "PAUSED":
           recentActivityText = `Paused ${title}`;
