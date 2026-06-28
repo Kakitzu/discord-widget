@@ -17,7 +17,7 @@ query ($userName: String) {
       status
       progress
       media {
-        title { userPreferred }
+        title { english romaji userPreferred }
         coverImage { large }
         type
       }
@@ -56,19 +56,13 @@ async function updateWidget() {
       (stats.anime.minutesWatched / 1440).toFixed(1),
     );
 
-    const creationDate = new Date(user.createdAt * 1000);
-    const trackingDate = creationDate.toLocaleDateString("en-US", {
-      month: "short",
-      year: "numeric",
-    });
-
     let recentActivityText = "No recent activity";
     let recentActivityImage = null; 
     const recentList = anilistData.data.Page.mediaList[0]; 
 
     if (recentList) {
       const media = recentList.media;
-      const title = media.title.userPreferred;
+      const title = media.title.english || media.title.romaji || media.title.userPreferred;
       const status = recentList.status; 
       const progress = recentList.progress;
       const isAnime = media.type === "ANIME";
@@ -114,7 +108,6 @@ async function updateWidget() {
       data: {
         dynamic: [
           { type: 1, name: "anilist_username", value: ANILIST_USERNAME },
-          { type: 1, name: "days_active", value: `➤ Tracking since ${trackingDate}` },
           { type: 1, name: "recent_activity", value: recentActivityText },
           { type: 2, name: "anime_count", value: stats.anime.count },
           { type: 2, name: "days_watched", value: daysWatched },
