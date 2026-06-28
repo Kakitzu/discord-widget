@@ -19,7 +19,14 @@ jobs:
 
       - name: Run script
         env:
-          DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          
+          DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-        run: node index.js
+          
+          HC_DISCORD_APP_ID: ${{ secrets.HC_DISCORD_APP_ID }}
+          HC_DISCORD_BOT_TOKEN: ${{ secrets.HC_DISCORD_BOT_TOKEN }}
+          HARDCOVER_API_KEY: ${{ secrets.HARDCOVER_API_KEY }}
+        run: |
+          node anilist.js
+          node hardcover.js
