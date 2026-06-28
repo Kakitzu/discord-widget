@@ -77,7 +77,7 @@ async function updateWidget() {
 
       switch (status) {
         case "CURRENT":
-          const unit = isAnime ? "EP" : "CH";
+          const unit = isAnime ? "episode" : "chapter";
           const action = isAnime ? "Watched" : "Read";
           recentActivityText = progress > 0 
             ? `${action} ${unit} ${progress} of ${title}`
