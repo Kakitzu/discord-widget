@@ -1,4 +1,4 @@
-name: Update AniList Widget
+name: Update Discord Widgets
 
 on:
   repository_dispatch:
