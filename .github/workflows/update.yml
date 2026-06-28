@@ -1,8 +1,8 @@
 name: Update AniList Widget
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
+  repository_dispatch:
+    types: [update-widget]
   workflow_dispatch:
 
 jobs:
