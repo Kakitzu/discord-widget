@@ -41,9 +41,9 @@ async function updateWidget() {
         variables: { userName: ANILIST_USERNAME },
       }),
     });
-    
+
     const anilistData = await anilistRes.json();
-    
+
     if (anilistData.errors) {
       console.error("AniList API Error:", anilistData.errors);
       return;
@@ -52,53 +52,65 @@ async function updateWidget() {
     const user = anilistData.data.User;
     const stats = user.statistics;
 
-    const daysWatched = parseFloat(
-      (stats.anime.minutesWatched / 1440).toFixed(1),
-    );
+    const creationDate = new Date(user.createdAt * 1000);
+    const trackingDate = creationDate.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
 
-    let recentActivityText = "No recent activity";
-    let recentActivityImage = null; 
-    const recentList = anilistData.data.Page.mediaList[0]; 
+    const daysWatched = (stats.anime.minutesWatched / 1440).toFixed(1);
+    const animeMeanScore = stats.anime.meanScore
+      ? stats.anime.meanScore.toString()
+      : "0";
+    const mangaMeanScore = stats.manga.meanScore
+      ? stats.manga.meanScore.toString()
+      : "0";
+
+    let activityType = "No recent activity";
+    let activityData = "";
+    let recentActivityImage = null;
+    const recentList = anilistData.data.Page.mediaList[0];
 
     if (recentList) {
       const media = recentList.media;
-      const title = media.title.english || media.title.romaji || media.title.userPreferred;
-      const status = recentList.status; 
+      const title =
+        media.title.english || media.title.romaji || media.title.userPreferred;
+      const status = recentList.status;
       const progress = recentList.progress;
       const isAnime = media.type === "ANIME";
-      
+
       recentActivityImage = media.coverImage.large;
+      activityData = title;
 
       switch (status) {
         case "CURRENT":
           const unit = isAnime ? "episode" : "chapter";
           const action = isAnime ? "Watched" : "Read";
-          recentActivityText = progress > 0 
-            ? `${action} ${unit} ${progress} of ${title}`
-            : `${action} ${title}`;
+          activityType =
+            progress > 0 ? `${action} ${unit} ${progress} of` : `${action}`;
           break;
         case "COMPLETED":
-          recentActivityText = `Completed ${title}`;
+          activityType = `Completed ${title}`;
           break;
         case "PLANNING":
-          recentActivityText = `Plan to ${isAnime ? "watch" : "read"} ${title}`;
+          activityType = `Plan to ${isAnime ? "watch" : "read"} ${title}`;
           break;
         case "REPEATING":
-          recentActivityText = `Re-${isAnime ? "watched" : "read"} ${title}`;
+          activityType = `Re-${isAnime ? "watched" : "read"} ${title}`;
           break;
         case "PAUSED":
-          recentActivityText = `Paused ${title}`;
+          activityType = `Paused ${title}`;
           break;
         case "DROPPED":
-          recentActivityText = `Dropped ${title}`;
+          activityType = `Dropped ${title}`;
           break;
         default:
-          recentActivityText = `Updated ${title}`;
+          activityType = `Updated ${title}`;
           break;
       }
-      
-      if (recentActivityText.length > 55) {
-        recentActivityText = recentActivityText.substring(0, 52) + "...";
+
+      if (activityData.length > 55) {
+        activityData = activityData.substring(0, 52) + "...";
       }
     }
 
@@ -108,13 +120,26 @@ async function updateWidget() {
       data: {
         dynamic: [
           { type: 1, name: "anilist_username", value: ANILIST_USERNAME },
-          { type: 1, name: "recent_activity", value: recentActivityText },
+          {
+            type: 1,
+            name: "days_active",
+            value: `Tracking since ${trackingDate}`,
+          },
           { type: 2, name: "anime_count", value: stats.anime.count },
-          { type: 2, name: "days_watched", value: daysWatched },
-          { type: 2, name: "anime_mean_score", value: stats.anime.meanScore },
+          { type: 1, name: "days_watched", value: daysWatched.toString() },
+          {
+            type: 1,
+            name: "anime_mean_score",
+            value: animeMeanScore.toString(),
+          },
           { type: 2, name: "manga_count", value: stats.manga.count },
           { type: 2, name: "chapters_read", value: stats.manga.chaptersRead },
-          { type: 2, name: "manga_mean_score", value: stats.manga.meanScore },
+          {
+            type: 1,
+            name: "manga_mean_score",
+            value: mangaMeanScore.toString(),
+          },
+          { type: 1, name: "activity_type", value: activityType },
         ],
       },
     };
@@ -123,9 +148,14 @@ async function updateWidget() {
       payload.data.dynamic.push({
         type: 3,
         name: "activity_image",
-        value: { url: recentActivityImage }
+        value: { url: recentActivityImage },
       });
     }
+    payload.data.dynamic.push({
+      type: 1,
+      name: "activity_data",
+      value: activityData,
+    });
 
     const discordUrl = `https://discord.com/api/v9/applications/${DISCORD_APP_ID}/users/${DISCORD_USER_ID}/identities/0/profile`;
 
@@ -134,14 +164,16 @@ async function updateWidget() {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
-        "User-Agent": "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)",
+        "User-Agent":
+          "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)",
       },
       body: JSON.stringify(payload),
     });
 
     if (discordRes.ok) {
       console.log("✅ Successfully updated Discord!");
-      console.log(`Pushed Activity: ${recentActivityText}`);
+      console.log(`Pushed Activity Type: "${activityType}"`);
+      console.log(`Pushed Activity Data: "${activityData}"`);
     } else {
       console.error("❌ Failed:", await discordRes.text());
     }
