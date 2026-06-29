@@ -3,8 +3,6 @@ const DISCORD_USER_ID = process.env.DISCORD_USER_ID;
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const ANILIST_USERNAME = "Kakitzu";
 
-const TITLE_MAX_LENGTH = 55;
-
 const query = `
 query ($userName: String) {
   User(name: $userName) {
@@ -72,7 +70,7 @@ function buildActivityFields(recentList) {
 
   return {
     activityType,
-    activityData: truncate(title, TITLE_MAX_LENGTH),
+    activityData,
     image: media.coverImage.large,
   };
 }
