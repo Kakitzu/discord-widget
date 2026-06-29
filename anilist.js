@@ -26,10 +26,6 @@ query ($userName: String) {
 }
 `;
 
-function truncate(str, max) {
-  return str.length > max ? str.substring(0, max - 3) + "..." : str;
-}
-
 function buildActivityFields(recentList) {
   if (!recentList) {
     return { activityType: "No recent activity", activityData: "", image: null };
