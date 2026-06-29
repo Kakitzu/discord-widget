@@ -3,8 +3,6 @@ const DISCORD_USER_ID = process.env.DISCORD_USER_ID;
 const DISCORD_BOT_TOKEN = process.env.HC_DISCORD_BOT_TOKEN;
 const HARDCOVER_API_KEY = process.env.HARDCOVER_API_KEY;
 
-const CURRENT_YEAR = new Date().getFullYear();
-
 const query = `
 query GetReadingData {
   me {
@@ -74,19 +72,25 @@ async function updateWidget() {
 
     const user = hcData.data.me?.[0];
     if (!user) {
-      console.error("No user data returned from Hardcover — check your API key.");
+      console.error(
+        "No user data returned from Hardcover — check your API key.",
+      );
       return;
     }
 
     const booksRead = user.read_books?.length ?? 0;
 
     const joinDate = new Date(user.created_at);
-    const daysAgoJoined = Math.floor((Date.now() - joinDate) / (1000 * 60 * 60 * 24));
+    const daysAgoJoined = Math.floor(
+      (Date.now() - joinDate) / (1000 * 60 * 60 * 24),
+    );
 
     const earliestBookDate = user.earliest_read_book?.[0]?.last_read_date;
-    const trackingStartDate = earliestBookDate ? new Date(earliestBookDate) : joinDate;
+    const trackingStartDate = earliestBookDate
+      ? new Date(earliestBookDate)
+      : joinDate;
     const totalTrackingDays = Math.floor(
-      (Date.now() - trackingStartDate) / (1000 * 60 * 60 * 24)
+      (Date.now() - trackingStartDate) / (1000 * 60 * 60 * 24),
     );
 
     const pace =
@@ -98,31 +102,58 @@ async function updateWidget() {
     const apiGoal = activeGoalObj?.goal ?? 0;
     const booksReadThisYear = activeGoalObj?.progress ?? 0;
 
-    const goalPercentage = apiGoal > 0 ? Math.floor((booksReadThisYear / apiGoal) * 100) : 0;
+    const booksRemaining = apiGoal > 0 ? apiGoal - booksReadThisYear : 0;
     const goalString =
-      apiGoal > 0 ? `${booksReadThisYear}/${apiGoal} (${goalPercentage}%)` : "No active goal";
-    const goalTitleString =
       apiGoal > 0
-        ? `Read ${apiGoal} books by 12/31/${CURRENT_YEAR}`
-        : "No active reading goal";
+        ? `I have to read ${booksRemaining} more books to hit my goal this year.`
+        : "I don't have an active goal yet.";
 
     const currentBookObj = user.currently_reading?.[0];
-    const bookProgressPercent = currentBookObj?.user_book_reads?.[0]?.progress ?? 0;
+    const bookProgressPercent =
+      currentBookObj?.user_book_reads?.[0]?.progress ?? 0;
 
     const payload = {
       username: user.name || user.username,
       data: {
         dynamic: [
-          { type: 3, name: "profile_image",         value: { url: user.image?.url } },
-          { type: 1, name: "books_read",            value: `${booksRead} total books read` },
-          { type: 1, name: "reading_goal",          value: goalTitleString },
-          { type: 1, name: "reading_pace",          value: `I read a book every ${pace} days.` },
-          { type: 3, name: "recent_book_image",     value: { url: currentBookObj?.book?.image?.url } },
-          { type: 1, name: "recent_book_name",      value: currentBookObj?.book?.title || "Nothing currently!" },
-          { type: 1, name: "recent_book_author",    value: currentBookObj?.book?.contributions?.[0]?.author?.name || "-" },
-          { type: 2, name: "progress",              value: bookProgressPercent / 100 || 0.0 },
-          { type: 1, name: "join_date",             value: `Joined ${daysAgoJoined} days ago` },
-          { type: 1, name: "reading_goal_progress", value: goalString },
+          { type: 3, name: "profile_image", value: { url: user.image?.url } },
+          {
+            type: 1,
+            name: "books_read",
+            value: `${booksRead} total books read`,
+          },
+          { type: 1, name: "reading_goal", value: goalString },
+          {
+            type: 1,
+            name: "reading_pace",
+            value: `I read a book every ${pace} days.`,
+          },
+          {
+            type: 3,
+            name: "recent_book_image",
+            value: { url: currentBookObj?.book?.image?.url },
+          },
+          {
+            type: 1,
+            name: "recent_book_name",
+            value: currentBookObj?.book?.title || "Nothing currently!",
+          },
+          {
+            type: 1,
+            name: "recent_book_author",
+            value:
+              currentBookObj?.book?.contributions?.[0]?.author?.name || "-",
+          },
+          {
+            type: 2,
+            name: "progress",
+            value: bookProgressPercent / 100 || 0.0,
+          },
+          {
+            type: 1,
+            name: "join_date",
+            value: `Joined ${daysAgoJoined} days ago`,
+          },
         ],
       },
     };
@@ -134,7 +165,8 @@ async function updateWidget() {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
-        "User-Agent": "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)",
+        "User-Agent":
+          "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)",
       },
       body: JSON.stringify(payload),
     });
@@ -142,7 +174,10 @@ async function updateWidget() {
     if (discordRes.ok) {
       console.log("✅ Successfully updated Discord!");
     } else {
-      console.error(`❌ Failed (HTTP ${discordRes.status}):`, await discordRes.text());
+      console.error(
+        `❌ Failed (HTTP ${discordRes.status}):`,
+        await discordRes.text(),
+      );
     }
   } catch (error) {
     console.error("Error:", error);
