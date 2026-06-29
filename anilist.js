@@ -45,7 +45,7 @@ function buildActivityFields(recentList) {
   let activityType;
   switch (status) {
     case "CURRENT": {
-      const unit = isAnime ? "episode" : "chapter";
+      const unit = isAnime ? "Episode" : "Chapter";
       const action = isAnime ? "Watched" : "Read";
       activityType = progress > 0 ? `${action} ${unit} ${progress} of` : action;
       break;
