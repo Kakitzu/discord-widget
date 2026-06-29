@@ -66,7 +66,7 @@ function buildActivityFields(recentList) {
 
   return {
     activityType,
-    activityData,
+    activityData: title,
     image: media.coverImage.large,
   };
 }
